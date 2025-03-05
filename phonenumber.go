@@ -50,6 +50,19 @@ func GetISO3166ByNumber(number string, withLandLine bool) ISO3166 {
 	return iso3166
 }
 
+// GetISO3166ByCountryCodePrefix returns the ISO3166 struct by country code prefix.
+// For example for prefix 65 it will return the ISO3166 struct for Singapore.
+func GetISO3166ByCountryCodePrefix(prefix string) ISO3166 {
+	result := ISO3166{}
+	for _, i := range GetISO3166() {
+		if prefix == i.CountryCode {
+			result = i
+			break
+		}
+	}
+	return result
+}
+
 // GetISO3166ByMobileNumber ...
 func GetISO3166ByMobileNumber(number string) []ISO3166 {
 	result := []ISO3166{}

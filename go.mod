@@ -1,3 +1,3 @@
-module github.com/dongri/phonenumber
+module github.com/verified-pay/phonenumber
 
 go 1.21

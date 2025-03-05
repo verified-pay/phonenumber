@@ -366,3 +366,16 @@ func TestGetISO3166ByMobileNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestGetISO3166ByCountryCodePrefix(t *testing.T) {
+	testPrefixList := [][]string{
+		{"65", "SG"},
+		{"48", "PL"},
+	}
+	for _, prefix := range testPrefixList {
+		country := GetISO3166ByCountryCodePrefix(prefix[0])
+		if country.Alpha2 != prefix[1] {
+			t.Errorf("GetISO3166ByCountryCodePrefix(prefix=`%s`): expected `%s`, actual `%s`", prefix[0], prefix[1], country.Alpha2)
+		}
+	}
+}
