@@ -80,6 +80,54 @@ func GetISO3166ByMobileNumber(number string) []ISO3166 {
 	return result
 }
 
+// GetISO3166ByAlpha2 ...
+func GetISO3166ByAlpha2(alpha2 string) ISO3166 {
+	result := ISO3166{}
+	for _, i := range GetISO3166() {
+		if i.Alpha2 == alpha2 {
+			result = i
+			break
+		}
+	}
+	return result
+}
+
+// GetISO3166ByAlpha3 ...
+func GetISO3166ByAlpha3(alpha3 string) ISO3166 {
+	result := ISO3166{}
+	for _, i := range GetISO3166() {
+		if i.Alpha3 == alpha3 {
+			result = i
+			break
+		}
+	}
+	return result
+}
+
+func EnsureCountryCodePrefix(phone string, country ISO3166, cutLeading0 bool) string {
+	phone = strings.TrimSpace(phone)
+	if len(phone) < 3 || len(country.Alpha2) != 2 {
+		return phone
+	}
+	if strings.HasPrefix(phone, "+") {
+		return phone
+	}
+
+	phoneData := GetISO3166ByAlpha2(country.Alpha2)
+	if len(phoneData.Alpha2) == 0 {
+		return phone
+	}
+	addCountryCode := ""
+	phoneStripped := strings.TrimLeft(phone, "0")
+	if cutLeading0 {
+		phone = phoneStripped
+	}
+	if !strings.HasPrefix(phoneStripped, phoneData.CountryCode) {
+		addCountryCode = phoneData.CountryCode
+	}
+	return "+" + addCountryCode + phone
+}
+
 func parseInternal(number string, country string, landLineInclude bool) string {
 	number = strings.Replace(number, " ", "", -1)
 	country = strings.Replace(country, " ", "", -1)

@@ -1,6 +1,7 @@
 package phonenumber
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -378,4 +379,75 @@ func TestGetISO3166ByCountryCodePrefix(t *testing.T) {
 			t.Errorf("GetISO3166ByCountryCodePrefix(prefix=`%s`): expected `%s`, actual `%s`", prefix[0], prefix[1], country.Alpha2)
 		}
 	}
+}
+
+func TestEnsureCountryCodePrefix(t *testing.T) {
+	testNumbers := [][]string{
+		{"+44 07700900000", "GB"},
+		{"07700900000", "GB"},
+		{"2817799181", "US"},
+		{"1111111111", "VI"}, // empty on Parse() = parse fail
+		{"+8109012345678", "JP"},
+		{"089965756", ""},
+		{"+4989965756", "DE"}, // TODO +494989965756 from Parse()
+		{"+49089965756", "DE"},
+		{"+497375965756", "DE"},
+		{"0089965756", ""},
+		{"+089965756", ""},
+		{"2604406155", "US"},
+	}
+
+	for _, number := range testNumbers {
+		parsed := ParseWithLandLine(number[0], number[1])
+		if parsed == "" {
+			if number[1] == "" {
+				t.Logf("Parse(number=`%s`, country=`%s`): expected parse failed", number[0], number[1])
+				continue
+			}
+			t.Errorf("Err: Parse(number=`%s`, country=`%s`): parse failed %s", number[0], number[1], parsed)
+			continue
+		}
+
+		phoneData := GetISO3166ByNumber(parsed, true)
+		if phoneData.Alpha2 != number[1] {
+			t.Errorf("Err: Parse(number=`%s`, country=`%s`): actual `%s`", number[0], number[1], phoneData.CountryCode)
+			continue
+		}
+		fixed := EnsureCountryCodePrefix(parsed, phoneData, true)
+		t.Logf("Parse(number=`%s`, country=`%s`):  parsed=`%s`,  fixed=`%s`", number[0], number[1], parsed, fixed)
+	}
+}
+
+func TestEnsureCountryCodePrefixRaw(t *testing.T) {
+	testNumbers := [][]string{
+		{"+44 07700900000", "GB"},
+		{"07700900000", "GB"},
+		{"2817799185", "US"},
+		{"1111111111", "VI"}, // empty on Parse() = parse fail
+		{"+8109012345678", "JP"},
+		{"089965756", ""},
+		{"+4989965756", "DE"},
+		{"+49089965756", "DE"},
+		{"+497375965756", "DE"},
+		{"0089965756", ""},
+		{"+089965756", ""},
+	}
+
+	for _, number := range testNumbers {
+		parsed := TrimPhoneNr(number[0])
+		phoneData := GetISO3166ByNumber(parsed, true)
+		if phoneData.Alpha2 != number[1] {
+			t.Errorf("Err: Parse(number=`%s`, country=`%s`): actual `%s`", parsed, number[1], phoneData.CountryCode)
+			continue
+		}
+		fixed := EnsureCountryCodePrefix(parsed, phoneData, true)
+		t.Logf("Parse(number=`%s`, country=`%s`):  fixed=`%s`", parsed, number[1], fixed)
+	}
+}
+
+var phoneTrimReg = regexp.MustCompile("[^0-9]+")
+
+func TrimPhoneNr(nr string) string {
+	//return strings.Trim(nr, "+- /()")
+	return phoneTrimReg.ReplaceAllString(nr, "")
 }
